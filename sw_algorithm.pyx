@@ -16,15 +16,10 @@ cimport cpp
 
 
 def sw_cpp(read, seq):
-    # Python strings need to be turned into bytes for cython to interpret them
-    # as cpp strings
+    # Python strings need to be turned into bytes for
+    # cython to interpret them as cpp strings
     cpp.smith_waterman(read.encode(), seq.encode())
 
-# cdef coordinates(int index, int columns):
-#     i = int(index/columns)
-#     j = index%columns
-#
-#     return i, j
 
 
 def sw_def_cython(read_py, sequence_py):
@@ -76,20 +71,7 @@ def sw_def_cython(read_py, sequence_py):
                 deletion = dp_table[left_cell] + gap_score
                 insertion = dp_table[above_cell] + gap_score
 
-                # because I am inside the nogil
-                # I cannot use max() because this is a python function
-                # and inside the nogil, only c++ operations are allowed
-                # this is usually checked when compiling with "annotate" flag
-                # which will show which parts of the code interact with python and which are pure c or c++
-                # also the cython compiler will complain if there's any part inside nogil interacts with python
-                if match > maximum:
-                    maximum = match
-                elif deletion > maximum:
-                    maximum = deletion
-                elif insertion > maximum:
-                    maximum = deletion
-                elif 0 > maximum:
-                    maximum = 0
+                maximum = max(match, deletion, insertion, 0)
 
                 if max_score < maximum:
                     max_score = maximum
@@ -101,10 +83,7 @@ def sw_def_cython(read_py, sequence_py):
                 dp_table[current_cell] = maximum
 
     # traceback
-    # for c in max_score_coordinates:
-    #     print(c, dp_table[c])
-    # for v in max_score_coordinates:
-    #     print(v)
+
     for coord in max_score_coordinates:
         max_score = dp_table[coord]
         out_read = ""
@@ -114,15 +93,11 @@ def sw_def_cython(read_py, sequence_py):
         i = coord / (seq_len + 1)
         j = coord % (seq_len + 1)
         while ((i != 0) and (j != 0)) and (dp_table[coord] != 0):
-            # print(coord, dp_table[coord])
-
 
             current_cell = coord
             left_cell = current_cell - 1
             above_cell = current_cell - seq_len - 1
             diagonal_cell = above_cell - 1
-
-            # print(diagonal_cell, left_cell, above_cell)
 
             if (max_score == dp_table[diagonal_cell] + match_score) or (max_score == dp_table[diagonal_cell] - match_score):  # match or mismatch
                 max_score = dp_table[diagonal_cell]
@@ -139,7 +114,6 @@ def sw_def_cython(read_py, sequence_py):
                 j = coord % (seq_len + 1)
                 out_read += "-"
                 out_seq += sequence_py[j]
-                # print(left_cell, coord)
 
 
             elif max_score == dp_table[above_cell] + gap_score:  # deletion
@@ -149,14 +123,7 @@ def sw_def_cython(read_py, sequence_py):
                 j = coord % (seq_len + 1)
                 out_read += read_py[i]
                 out_seq += "-"
-                # print(above_cell, coord)
 
 
-        # print(out_read)
-        # print(out_read)
-        # print(out_read[::-1])
-        # print(out_seq[::-1])
-
-    # output
-    # print(out_read[::-1])
-    # print(out_seq[::-1])
+        print(out_read[::-1])
+        print(out_seq[::-1])

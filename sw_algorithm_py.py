@@ -1,6 +1,3 @@
-import pdb
-
-
 def sw_def(read, sequence):
     read_len = len(read)
     seq_len = len(sequence)
@@ -24,24 +21,27 @@ def sw_def(read, sequence):
             above_cell = current_cell - seq_len - 1
             diagonal_cell = above_cell - 1
 
-            match = dp_table[diagonal_cell] + (match_score if read[i - 1] == sequence[j - 1] else - match_score)
+            if read[i -1] == sequence[j - 1]:
+                match = dp_table[diagonal_cell] + match_score
+            else:
+                match = dp_table[diagonal_cell] - match_score
+
             deletion = dp_table[left_cell] + gap_score
             insertion = dp_table[above_cell] + gap_score
 
             maximum = max(match, deletion, insertion, 0)
 
-            if maximum > max_score:
+            if max_score < maximum:
                 max_score = maximum
                 max_score_coordinates = [current_cell]
-            elif maximum == max_score:
+            elif max_score == maximum:
                 max_score_coordinates.append(current_cell)
 
             dp_table[current_cell] = maximum
+
             
 
     # tracebakc
-    # for c in max_score_coordinates:
-    #     print(c, dp_table[c])
 
     for coord in max_score_coordinates:
         max_score = dp_table[coord]
@@ -84,8 +84,6 @@ def sw_def(read, sequence):
                 out_read += read[i]
                 out_seq += "-"
 
-        # output
-        # print(out_read)
-        # print(out_seq)
-        # print(out_read[::-1])
-        # print(out_seq[::-1])
+
+        print(out_read[::-1])
+        print(out_seq[::-1])

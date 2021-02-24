@@ -12,6 +12,8 @@ void smith_waterman(string read, string seq){
 //    int row, left_cell, current_cell, above_cell, diagonal_cell, match, deletion, insertion, maximum, i, j;
     vector<int> dp_table( (read_len+1) * (seq_len+1), 0);
     int current_cell, max_score = 0;
+
+    // you can turn max_score_coorindate to an int to store only one max instead all max scores in dp table
     vector<int> max_score_coordinates;
 
     int i, j;
@@ -41,15 +43,20 @@ void smith_waterman(string read, string seq){
 
             if (match > maximum){
                 maximum = match;
-            } else if (maximum < deletion){
+            }
+            if (maximum < deletion){
                 maximum = deletion;
-            } else  if (maximum < insertion){
+            }
+            if (maximum < insertion){
                 maximum = insertion;
-            } else if (0 > maximum){
+            }
+            if (0 > maximum){
                 maximum = 0;
             }
 
 
+            // this can be removed and only the the first if kept
+            // and only max_score_coordinate = current_cell is required to keep the coordinates for that max score
             if (max_score < maximum){
                 max_score = maximum;
                 max_score_coordinates.clear();
@@ -67,6 +74,7 @@ void smith_waterman(string read, string seq){
     //     cout << v << " " << dp_table[v] <<endl;
     // }
     // Traceback
+    // The first loop can be removed and only do the while loop for one max score and one coorindates
     for (int coord: max_score_coordinates){
         max_score = dp_table[coord];
         int i, j;
@@ -107,6 +115,14 @@ void smith_waterman(string read, string seq){
             }
         }
 
+        cout << endl;
+        for (int i=out_read.length() -1; i>=0; i--){
+            cout << out_read[i];
+        }
+        cout << endl;
+        for (int i=out_seq.length() -1; i>=0; i--){
+            cout << out_seq[i];
+        }
         // reverse(out_read.begin(), out_read.end()); 
         // reverse(out_seq.begin(), out_seq.end());
         // cout << out_read << endl;
