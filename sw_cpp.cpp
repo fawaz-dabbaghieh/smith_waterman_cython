@@ -79,8 +79,8 @@ void smith_waterman(string read, string seq){
         max_score = dp_table[coord];
         int i, j;
         string out_read, out_seq;
-        i = coord / seq_len + 1;
-        j = coord % seq_len + 1;
+        i = coord / (seq_len + 1);
+        j = coord % (seq_len + 1);
 
         while ( ((i != 0) && (j != 0)) && (dp_table[coord] != 0) ){
 
