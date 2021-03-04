@@ -12,6 +12,7 @@ So one can use a vector, or memory allocation with malloc
 
 from libcpp.vector cimport vector
 from libcpp.string cimport string
+from libc.stdlib cimport malloc, free
 cimport cpp
 
 
@@ -28,10 +29,11 @@ def sw_def_cython(read_py, sequence_py):
     cdef int read_len = len(read)
     cdef int seq_len = len(sequence)
     cdef int dimension = (read_len + 1) * (seq_len + 1)
-    cdef vector[int] dp_table
-    dp_table.reserve(dimension)
+    # cdef vector[int] dp_table
+    # dp_table.reserve(dimension)
 
-    # cdef int *dp_table = <int *> malloc(dimension * sizeof(int))
+    cdef int *dp_table = <int *> malloc(dimension * sizeof(int))
+
     cdef int gap_score = -2
     cdef int match_score = 1
 
@@ -127,3 +129,4 @@ def sw_def_cython(read_py, sequence_py):
 
         print(out_read[::-1])
         print(out_seq[::-1])
+    free(dp_table)
