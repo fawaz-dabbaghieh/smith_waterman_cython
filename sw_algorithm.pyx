@@ -15,7 +15,6 @@ from libcpp.string cimport string
 from libc.stdlib cimport malloc, free
 cimport cpp
 
-
 def sw_cpp(read, seq):
     # Python strings need to be turned into bytes for
     # cython to interpret them as cpp strings
@@ -35,13 +34,15 @@ def sw_def_cython(read_py, sequence_py):
     cdef int *dp_table = <int *> malloc(dimension * sizeof(int))
 
     cdef int gap_score = -2
+
     cdef int match_score = 1
 
     cdef int max_score = 0
     # cdef int max_score_coordinates = 0
     # cdef vector[int] max_score
     cdef vector[int] max_score_coordinates
-    cdef int row, left_cell, current_cell, above_cell, diagonal_cell, match, deletion, insertion, maximum, i, j, coord
+    cdef int row, left_cell, current_cell, above_cell, diagonal_cell, match, deletion, insertion, maximum, i, j, coord, score
+
     # cdef str out_read, out_seq
 
     # initializing vector with zeros, otherwise random values
@@ -65,10 +66,15 @@ def sw_def_cython(read_py, sequence_py):
                 above_cell = current_cell - seq_len - 1
                 diagonal_cell = above_cell - 1
 
+                #"""
                 if read[i - 1] == sequence[j - 1]:
                     match = dp_table[diagonal_cell] + match_score
                 else:
                     match = dp_table[diagonal_cell] - match_score
+                #"""
+                #score = BLOSUM62[(read[i - 1],sequence[j - 1])]
+                #match = dp_table[diagonal_cell] + score
+
                 # match = dp_table[diagonal_cell] + (match_score if read[i] == sequence[j] else - match_score)
                 deletion = dp_table[left_cell] + gap_score
                 insertion = dp_table[above_cell] + gap_score
