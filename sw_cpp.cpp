@@ -1,17 +1,24 @@
 #include "sw_cpp.h"
 
 
-void smith_waterman(string read, string seq){
-    bool sw = false;
-    bool penalize_end_gaps = false;
-    int gap_open = -20;
-    int gap_score = -1;
-    int match_score = 1;
+vector<pair<string, string>> smith_waterman(string read, string seq, int gap_open, int gap_score, bool penalize_end_gaps,
+                    bool sw, bool nuc, int nuc_match, int nuc_mismatch, int max_alignments){
+
+    int match_score, mismatch_score;
+
+    if (nuc) {
+        match_score = nuc_match;
+        mismatch_score = nuc_mismatch;
+    }
+
+    if (!sw) {
+        max_alignments = 1;
+    }
 
     size_t read_len = read.length();
     size_t seq_len = seq.length();
 
-    cout << "Read length: " << read_len << ", Seq length: " << seq_len << endl;
+    // cout << "Read length: " << read_len << ", Seq length: " << seq_len << endl;
 
     map<char, map<char, int>> BLOSUM62 { {'W', {{'F', 1}, {'R', -3}, {'A', -3}, {'E', -3}, {'M', -1}, {'I', -3}, {'Q', -2}, {'D', -4}, {'L', -2}, {'H', -2}, {'T', -2}, {'P', -4}, {'W', 11}, {'G', -2}, {'C', -2}, {'K', -3}, {'N', -4}, {'S', -3}, {'B', -4}, {'Z', -3}, {'X', -2}, {'Y', 2}, {'V', -3}} },
 {'L', {{'R', -2}, {'N', -3}, {'Q', -2}, {'A', -1}, {'E', -3}, {'D', -4}, {'H', -3}, {'L', 4}, {'C', -1}, {'G', -4}, {'I', 2}, {'P', -3}, {'X', -1}, {'V', 1}, {'K', -2}, {'Z', -3}, {'B', -4}, {'S', -2}, {'W', -2}, {'T', -1}, {'M', 2}, {'Y', -1}, {'F', 0}} },
@@ -39,46 +46,33 @@ void smith_waterman(string read, string seq){
 
     //cout << "After blosum init";
 
-    int row, left_cell, current_cell, above_cell, diagonal_cell, match, deletion, insertion, maximum, i, j, max_score, startrow, startcol;
+    int row, left_cell, current_cell, above_cell, diagonal_cell, match, deletion, insertion, maximum, i, j, max_score;
     vector<int> dp_table( (read_len+1) * (seq_len+1), 0);
     vector<int> traceback_table( (read_len+1) * (seq_len+1), 1);
 
     vector<int> max_score_coordinates;
 
-    if (sw) {
-        max_score = 0;
-        startrow = 0;
-        startcol = 0;
-        // you can turn max_score_coorindate to an int to store only one max instead all max scores in dp table
+    max_score = 0;
 
-    } else {
-        if (penalize_end_gaps) {
-            max_score = (read_len+seq_len) * gap_score;
-            // for needleman-wunsch init the first row and column
-            for (int row = 1; row < read_len+1; row++){
-                i = (seq_len + 1) * row + 1; // first entry of row
-                dp_table[i] = gap_open + (row-1)*gap_score;
-            }
-            for (int col = 1; col < seq_len+1; col++){
-                dp_table[col] = gap_open + (col-1)*gap_score;
-            }
-        } else {
-            max_score = 0;
+    if (penalize_end_gaps) {
+        // for needleman-wunsch init the first row and column
+        for (int row = 1; row < read_len+1; row++){
+            i = (seq_len + 1) * row + 1; // first entry of row
+            dp_table[i] = gap_open + (row-1)*gap_score;
         }
-        startrow = 0;
-        startcol = 0;
+        for (int col = 1; col < seq_len+1; col++){
+            dp_table[col] = gap_open + (col-1)*gap_score;
+        }
     }
 
     maximum = max_score;
 
-
-
     //cout << "After init";
 
-    for (int r = startrow; r < read_len; r++){
+    for (int r = 0; r < read_len; r++){
         i = r + 1;
         row = i * (seq_len + 1);
-        for (int c = startcol; c < seq_len; c++){
+        for (int c = 0; c < seq_len; c++){
             j = c + 1;
 
             current_cell = row + j;
@@ -87,13 +81,14 @@ void smith_waterman(string read, string seq){
             diagonal_cell = above_cell - 1;
 
             // match or missmatch
-            if (sw) {
+            if (nuc) {
                 if (read[i-1] == seq[j - 1]){
                     match =  dp_table[diagonal_cell] + match_score;
                 } else {
-                    match = dp_table[diagonal_cell] - match_score;
+                    match = dp_table[diagonal_cell] + mismatch_score;
                 }
             } else {
+                // the python wrapper multiplies all scores by 2, so here the blosum scores also has to be multiplied
                 match =  dp_table[diagonal_cell] + 2*BLOSUM62[read[i-1]][seq[j - 1]];
             }
 
@@ -132,15 +127,14 @@ void smith_waterman(string read, string seq){
 
             // this can be removed and only the the first if kept
             // and only max_score_coordinate = current_cell is required to keep the coordinates for that max score
-            if (sw) {
-                if (max_score < maximum){
-                    max_score = maximum;
-                    max_score_coordinates.clear();
-                    max_score_coordinates.push_back(current_cell);
-                } else if (max_score == maximum && sw){
-                    max_score_coordinates.push_back(current_cell);
-                }
+            if (max_score < maximum){
+                max_score = maximum;
+                max_score_coordinates.clear();
+                max_score_coordinates.push_back(current_cell);
+            } else if (max_score == maximum && max_score_coordinates.size() < max_alignments){
+                max_score_coordinates.push_back(current_cell);
             }
+
             dp_table[current_cell] = maximum;
         }
     }
@@ -151,14 +145,17 @@ void smith_waterman(string read, string seq){
     bool continue_traceback;
 
     if (!sw) {
+        max_score_coordinates.clear();
         max_score_coordinates.push_back(current_cell);
     }
 
-    //cout << "Before traceback ";
+    // cout << "Before traceback ";
 
     //for (int v: max_score_coordinates){
     //    cout << v << " " << dp_table[v] <<endl;
     //}
+
+    vector<pair <string, string>> alignment_tuples;
 
     for (int coord: max_score_coordinates){
         max_score = dp_table[coord];
@@ -228,17 +225,11 @@ void smith_waterman(string read, string seq){
             }
         }
 
-        cout << endl;
-        for (int i=out_read.length() -1; i>=0; i--){
-            cout << out_read[i];
-        }
-        cout << endl;
-        for (int i=out_seq.length() -1; i>=0; i--){
-            cout << out_seq[i];
-        }
-        // reverse(out_read.begin(), out_read.end()); 
-        // reverse(out_seq.begin(), out_seq.end());
-        // cout << out_read << endl;
-        // cout << out_seq <<  endl;
+        std::reverse(out_read.begin(), out_read.end());
+        std::reverse(out_seq.begin(), out_read.end());
+
+        alignment_tuples.push_back({out_read, out_seq});
+
     }
+    return alignment_tuples;
 }

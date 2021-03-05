@@ -15,11 +15,42 @@ from libcpp.string cimport string
 from libc.stdlib cimport malloc, free
 cimport cpp
 
-def sw_cpp(read, seq):
+def sw_cpp(read, seq, gap_open = -10.0, gap_extent = -0.5, penalize_end_gaps = False,
+            algorithm = 'nw', seq_type = 'aa', nuc_match = 1., nuc_mismatch = -1., max_alignments = 1):
+
+    # algorithm is either sw (smith_waterman) or nw (needleman-wunsch) for local or global alignment
+    # seq_type is either aa (using Blosum62 as substitution matrix) or nuc (using given match scores)
+
+    # multiply all scores by 2 and transform to int. Thus, users can provide scores at 0.5 step, while the underlying c++ code can use int only.
+    gap_open = int(2*gap_open)
+    gap_extent = int(2*gap_extent)
+    nuc_match = int(2*nuc_match)
+    nuc_mismatch = int(2*nuc_mismatch)
+
+    if algorithm == 'sw':
+        sw = True
+    elif algorithm == 'nw':
+        sw = False
+    else:
+        raise Exception('Illegal algorithm parameter given: %s' % algorithm)
+
+    if seq_type == 'nuc':
+        nuc = True
+    elif seq_type == 'aa':
+        nuc = False
+    else:
+        raise Exception('Illegal seq_type parameter given: %s' % seq_type)
+
     # Python strings need to be turned into bytes for
     # cython to interpret them as cpp strings
-    cpp.smith_waterman(read.encode(), seq.encode())
+    alignment_tuples = cpp.smith_waterman(read.encode(), seq.encode(), gap_open,
+                                gap_extent, penalize_end_gaps, sw, nuc, nuc_match, nuc_mismatch, max_alignments)
 
+    if len(alignment_tuples) == 1:
+        read_aligned, seq_aligned = alignment_tuples[0]
+        return read_aligned, seq_aligned
+    else:
+        return alignment_tuples
 
 
 def sw_def_cython(read_py, sequence_py):
