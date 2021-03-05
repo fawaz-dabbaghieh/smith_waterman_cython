@@ -67,7 +67,7 @@ vector<pair<string, string>> smith_waterman(string read, string seq, int gap_ope
 
     maximum = max_score;
 
-    //cout << "After init";
+    // cout << "After init" << endl;
 
     for (int r = 0; r < read_len; r++){
         i = r + 1;
@@ -149,13 +149,13 @@ vector<pair<string, string>> smith_waterman(string read, string seq, int gap_ope
         max_score_coordinates.push_back(current_cell);
     }
 
-    // cout << "Before traceback ";
-
     //for (int v: max_score_coordinates){
     //    cout << v << " " << dp_table[v] <<endl;
     //}
 
     vector<pair <string, string>> alignment_tuples;
+
+    // cout << "Before traceback " << alignment_tuples.size() << endl;
 
     for (int coord: max_score_coordinates){
         max_score = dp_table[coord];
@@ -171,6 +171,7 @@ vector<pair<string, string>> smith_waterman(string read, string seq, int gap_ope
         }
 
         while (continue_traceback){
+
             int current_cell = coord;
             int left_cell = current_cell - 1;
             int above_cell = current_cell - (seq_len + 1);
@@ -225,10 +226,10 @@ vector<pair<string, string>> smith_waterman(string read, string seq, int gap_ope
             }
         }
 
-        std::reverse(out_read.begin(), out_read.end());
-        std::reverse(out_seq.begin(), out_read.end());
+        reverse(out_read.begin(), out_read.end());
+        reverse(out_seq.begin(), out_seq.end());
 
-        alignment_tuples.push_back({out_read, out_seq});
+        alignment_tuples.push_back({out_read,out_seq});
 
     }
     return alignment_tuples;
