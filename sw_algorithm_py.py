@@ -85,5 +85,5 @@ def sw_def(read, sequence):
                 out_seq += "-"
 
 
-        print(out_read[::-1])
-        print(out_seq[::-1])
+        # print(out_read[::-1])
+        # print(out_seq[::-1])

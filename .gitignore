@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+sw_algorithm.cpp
+*html
 sw_old/
 # C extensions
 *.so

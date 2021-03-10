@@ -164,6 +164,6 @@ def sw_def_cython(read_py, sequence_py):
                 out_seq += "-"
 
 
-        print(out_read[::-1])
-        print(out_seq[::-1])
+        # print(out_read[::-1])
+        # print(out_seq[::-1])
     free(dp_table)
