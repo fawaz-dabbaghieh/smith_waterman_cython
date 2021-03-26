@@ -14,6 +14,8 @@ from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libc.stdlib cimport malloc, free
 cimport cpp
+from constants import blosum62
+
 
 def sw_cpp(read, seq, gap_open = -10.0, gap_extent = -0.5, penalize_end_gaps = False,
             algorithm = 'nw', seq_type = 'aa', nuc_match = 1., nuc_mismatch = -1., max_alignments = 1):
@@ -59,6 +61,7 @@ def sw_def_cython(read_py, sequence_py):
     cdef int read_len = len(read)
     cdef int seq_len = len(sequence)
     cdef int dimension = (read_len + 1) * (seq_len + 1)
+    cdef int counter = 0
     # cdef vector[int] dp_table
     # dp_table.reserve(dimension)
 
@@ -89,6 +92,8 @@ def sw_def_cython(read_py, sequence_py):
 
             row = i * (seq_len + 1)
             for j in range(seq_len):
+                counter += 1
+
                 maximum = 0
                 j += 1
 
@@ -166,4 +171,5 @@ def sw_def_cython(read_py, sequence_py):
 
         # print(out_read[::-1])
         # print(out_seq[::-1])
+        print(counter)
     free(dp_table)
